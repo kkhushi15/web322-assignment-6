@@ -33,9 +33,6 @@ const HTTP_PORT = process.env.PORT || 8080;
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
-
-// Assignment 6
-
 app.use(clientSessions( {
     cookieName: "session",
     secret: "web322_a6",
@@ -97,22 +94,13 @@ app.use(function (req, res, next) {
     next();
 });
 
-
-// URL Main Pathway
-
 app.get("/", (req, res) => {
     res.redirect('/blog');
 });
 
-
-// About
-
 app.get("/about", (req, res) => {
     res.render(path.join(__dirname, "/views/about.hbs"));
 });
-
-
-// Posts/Add GET Route
 
 app.get("/posts/add", ensureLogin, (req, res) => {
     blogservice.getCategories()
@@ -123,24 +111,15 @@ app.get("/posts/add", ensureLogin, (req, res) => {
         });
 });
 
-
-// Categories/Add GET Route
-
 app.get("/categories/add", ensureLogin, (req, res) => {
     res.render(path.join(__dirname, "/views/addCategory.hbs"));
 });
-
-
-// Categories/Add POST Route
 
 app.post("/categories/add", ensureLogin, (req, res) => {
     blogservice.addCategory(req.body).then(() => {
         res.redirect("/categories");
     })
 });
-
-
-// Categories/Delete/:ID Route
 
 app.get("/categories/delete/:id", ensureLogin, (req, res) => {
     blogservice.deleteCategoryById(req.params.id)
@@ -152,9 +131,6 @@ app.get("/categories/delete/:id", ensureLogin, (req, res) => {
         });
 });
 
-
-// Posts/Delete/:ID Route
-
 app.get("/posts/delete/:id", ensureLogin, (req, res) => {
     blogservice.deletePostById(req.params.id)
         .then(() => {
@@ -165,9 +141,6 @@ app.get("/posts/delete/:id", ensureLogin, (req, res) => {
         });
 });
 
-
-// Cloudinary Connection Info (for uploading at 'Add Post' image)
-
 cloudinary.config({
     cloud_name: 'senecacollege',
     api_key: '522221365446921',
@@ -175,34 +148,20 @@ cloudinary.config({
     secure: true
   });
 
-// Blog Route
-
 app.get('/blog', async (req, res) => {
-
-    // Declare an object to store properties for the view
     let viewData = {};
 
     try {
-
-        // declare empty array to hold "post" objects
         let posts = [];
 
-        // if there's a "category" query, filter the returned posts by category
         if (req.query.category) {
-            // Obtain the published "posts" by category
             posts = await blogData.getPublishedPostsByCategory(req.query.category);
         } else {
-            // Obtain the published "posts"
             posts = await blogData.getPublishedPosts();
         }
-
-        // sort the published posts by postDate
         posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
-
-        // get the latest post from the front of the list (element 0)
         let post = posts[0];
 
-        // store the "posts" and "post" data in the viewData object (to be passed to the view)
         viewData.posts = posts;
         viewData.post = post;
 
@@ -211,22 +170,14 @@ app.get('/blog', async (req, res) => {
     }
 
     try {
-        // Obtain the full list of "categories"
         let categories = await blogData.getCategories();
-
-        // store the "categories" data in the viewData object (to be passed to the view)
         viewData.categories = categories;
     } catch (err) {
         viewData.categoriesMessage = "no results"
     }
-
-    // render the "blog" view with all of the data (viewData)
     res.render("blog", { data: viewData })
 
 });
-
-
-// Posts Route
 
 app.get("/posts", ensureLogin, (req, res) => {
     let category = req.query.category;
@@ -264,9 +215,6 @@ app.get("/posts", ensureLogin, (req, res) => {
     }
 });
 
-
-// Categories Route
-
 app.get("/categories", ensureLogin, (req, res) => {
     blogservice.getCategories().then(data => {
         if (data.length > 0) {
@@ -277,9 +225,6 @@ app.get("/categories", ensureLogin, (req, res) => {
         }
     })
 });
-
-
-// Posts/Add POST Route
 
 app.post('/posts/add', upload.single("featureImage"), (req, res) => {
     if (req.file) {
@@ -314,9 +259,6 @@ app.post('/posts/add', upload.single("featureImage"), (req, res) => {
 
     function processPost(imageUrl) {
         req.body.featureImage = imageUrl;
-
-        // TODO: Process the req.body and add it as a new Blog Post before redirecting to /posts
-
         blogservice.addPost(req.body).then(() => {
             res.redirect("/posts");
         }).catch(err => {
@@ -324,9 +266,6 @@ app.post('/posts/add', upload.single("featureImage"), (req, res) => {
         })
     }
 });
-
-
-// Post/:Value Route
 
 app.get('/post/:value', ensureLogin, (req, res) => {
     blogservice.getPostById(req.params.value).then((data) => {
@@ -336,32 +275,18 @@ app.get('/post/:value', ensureLogin, (req, res) => {
     });
 });
 
-
-// Blog/:id Route
-
 app.get('/blog/:id', ensureLogin, async (req, res) => {
-
-    // Declare an object to store properties for the view
     let viewData = {};
 
     try {
-
-        // declare empty array to hold "post" objects
         let posts = [];
-
-        // if there's a "category" query, filter the returned posts by category
         if (req.query.category) {
-            // Obtain the published "posts" by category
             posts = await blogData.getPublishedPostsByCategory(req.query.category);
         } else {
-            // Obtain the published "posts"
             posts = await blogData.getPublishedPosts();
         }
-
-        // sort the published posts by postDate
         posts.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
 
-        // store the "posts" and "post" data in the viewData object (to be passed to the view)
         viewData.posts = posts;
 
     } catch (err) {
@@ -369,7 +294,6 @@ app.get('/blog/:id', ensureLogin, async (req, res) => {
     }
 
     try {
-        // Obtain the post by "id"
         viewData.post = await blogData.getPostById(req.params.id);
         console.log(viewData.post)
     } catch (err) {
@@ -377,28 +301,17 @@ app.get('/blog/:id', ensureLogin, async (req, res) => {
     }
 
     try {
-        // Obtain the full list of "categories"
         let categories = await blogData.getCategories();
-
-        // store the "categories" data in the viewData object (to be passed to the view)
         viewData.categories = categories;
     } catch (err) {
         viewData.categoriesMessage = "no results"
     }
-
-    // render the "blog" view with all of the data (viewData)
     res.render("blog", { data: viewData })
 });
-
-
-// Login
 
 app.get("/login", (req, res) => {
     res.render("login");
 });
-
-
-// Register
 
 app.get("/register", (req, res) => {
     res.render("register");
@@ -426,24 +339,14 @@ app.post("/login", (req, res) => {
     });
 });
 
-
-// Logout
-
 app.get("/logout", (req, res) => {
     req.session.reset();
     res.redirect("/");
 });
 
-
-// User History
-
 app.get("/userHistory", ensureLogin, (req, res) => {
     res.render("userHistory");
 });
-
-
-
-// 404 Error Route
 
 app.use((req, res) => {
     res.status(404).send("Page Not Found");
